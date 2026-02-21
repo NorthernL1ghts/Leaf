@@ -52,6 +52,28 @@ void print_usage(char** argv) {
     printf("USAGE: %s <path_to_file_to_compile>\n", argv[0]);
 }
 
+typedef struct Error {
+    enum ErrorType {
+        ERROR_NONE = 0,
+        ERROR_ARGUMENTS,
+        ERROR_TYPE,
+        ERROR_GENERIC,
+        ERROR_SYNTAX,
+        ERROR_TODO,
+        ERROR_MAX,
+    } type;
+    char* msg;
+} Error;
+
+Error ok = { ERROR_NONE, NULL };
+
+#define ERROR_CREATE(n, t, msg)           \
+    Error (n) = { (t), (msg) }
+
+#define ERROR_PREP(n, t, message)           \
+    (n).type = (t);                          \
+    (n).msg = (message);
+
 int main(int argc, char** argv) {
     if (argc < 2) {
         print_usage(argv);

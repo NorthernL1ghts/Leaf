@@ -129,7 +129,45 @@ Error lex(char* source, char** beg, char** end) {
     return err;
 }
 
-Error parse_expr(char* source) {
+typedef long long integer_t;
+typedef struct Node {
+    enum NodeType {
+        NODE_TYPE_NONE,
+        NODE_TYPE_INTEGER,
+        NODE_TYPE_MAX,
+    } type;
+    
+    union NodeValue {
+        integer_t integer;
+    } value;
+
+    struct Node* children[3];
+} Node;
+
+#define nonep(node)    ((node).type == NODE_TYPE_NONE)
+#define integerp(node) ((node).type == NODE_TYPE_INTEGER)
+
+// TODO:
+// |-- API to create a new Binding.
+// `-- API to add Binding to the Environment.
+typedef struct Binding {
+    char* id;
+    char* value;
+    struct Binding* next;
+} Binding;
+
+// TODO:
+// |-- API to create a new Environment.
+typedef struct Environment {
+    struct Environment* parent;
+    Binding* bind;
+} Environment;
+
+void environment_set() {
+    
+}
+
+Error parse_expr(char* source, Node* result) {
     char* beg = source;
     char* end = source;
     Error err = ok;
@@ -151,7 +189,8 @@ int main(int argc, char** argv) {
     if (contents) {
         // printf("Contents of %s:\n--------------------------------\n%s\n--------------------------------\n", path, contents);
 
-        Error err = parse_expr(contents);
+        Node expression;
+        Error err = parse_expr(contents, &expression);
         print_error(err);
 
         free(contents);

@@ -6,7 +6,7 @@ High-level roadmap. Order is roughly: lex → parse → codegen.
 
 ## 1. Lexer
 
-- [ ] Lex source into tokens (identifiers, literals, operators, keywords, etc.).
+- [x] Lex source into tokens (identifiers, literals, operators, keywords, etc.).
 
 ## 2. Parser
 

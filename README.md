@@ -1,17 +1,25 @@
 # Leaf
 
-**The compiler for the Leaf programming language.**
+A compiler for the **Leaf** programming language, implemented from scratch.
 
-A from-scratch compiler project — no grand plan, just building a compiler because it sounds like fun.
+## Overview
 
-## What’s the idea?
+Leaf compiles Leaf source code into runnable output. The codebase is structured along a conventional pipeline: lexing, parsing, and code generation. Codegen may target native assembly (e.g. x86_64) or a transpilation path (e.g. emit C and use an existing toolchain); the approach is still open.
 
-Leaf will take source code and turn it into something runnable: either native code (e.g. x86_64) or by transpiling to another language (e.g. C) and compiling that. The path is still open.
+## Example and testing
+
+The repository includes a reference example that defines valid, compilable Leaf syntax:
+
+- **`examples/Example.leaf`** — variables, assignment, and a function signature (e.g. `defun foo(a:integer, b:integer):integer`).
+
+This file serves as a concrete target for the lexer and parser and as a minimal test case as the compiler is developed.
 
 ## Project layout
 
-- **`docs/`** — design notes, TODO, and other documentation.
-- **`examples/`** — sample Leaf source (e.g. `Example.leaf`).
+| Path        | Description                                      |
+| ----------- | ------------------------------------------------- |
+| `docs/`     | Design notes, roadmap (e.g. [docs/TODO.md](docs/TODO.md)), and other documentation. |
+| `examples/` | Sample Leaf sources used for development and validation. |
 
 ## License
 

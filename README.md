@@ -11,6 +11,7 @@ Leaf will take source code and turn it into something runnable: either native co
 ## Project layout
 
 - **`docs/`** — design notes, TODO, and other documentation.
+- **`examples/`** — sample Leaf source (e.g. `Example.leaf`).
 
 ## License
 

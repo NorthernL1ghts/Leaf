@@ -46,3 +46,7 @@ High-level roadmap. Order is roughly: lex → parse → codegen.
 **Unnamed variables**
 
 It would be nice if an assignment and/or variable declaration could have no identifier and instead work on a single unnamed variable in the environment.
+
+**Compile to BrainFuck**
+
+This is just a perfect idea. I don't even know if it's possible.

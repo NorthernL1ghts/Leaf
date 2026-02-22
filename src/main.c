@@ -124,6 +124,14 @@ Token* token_create() {
     return token;
 }
 
+void free_tokens(Token* root) {
+    while (root) {
+        Token* token_to_free = root;
+        root = root->next;
+        free(token_to_free);
+    }
+}
+
 void print_tokens(Token* root) {
     size_t count = 1;
     while (root) {
@@ -181,7 +189,7 @@ typedef struct Node {
 typedef struct Binding {
     char* id;
     char* value;
-    struct Binding* next;
+    struct Binding* token_to_free;
 } Binding;
 
 // TODO:
@@ -206,8 +214,9 @@ Error parse_expr(char* source, Node* result) {
     while ((err = lex(current_token.end, &current_token)).type == ERROR_NONE) {
         if (current_token.end - current_token.beginning == 0) { break;}
         
+        // FIXME: This conditional branch could be removed from the loop.
         if (tokens) {
-            // Overwrite into tokens->next
+            // Append to end of list
             token_it->next = token_create();
             memcpy(token_it->next, &current_token, sizeof(Token));
             token_it = token_it->next;
@@ -217,11 +226,26 @@ Error parse_expr(char* source, Node* result) {
             memcpy(tokens, &current_token, sizeof(Token));
             token_it = tokens;
         }
-
-        printf("lexed: %.*s\n", current_token.end - current_token.beginning, current_token.beginning);
     }
 
     print_tokens(tokens);
+
+    Node* root = calloc(1, sizeof(Node));
+    assert(root && "Could not allocate memory for Root AST node");
+    token_it = tokens;
+    while (token_it) {
+        // TODO: Map constructs from the language and attempt to create nodes.
+
+        size_t token_length = token_it->end - token_it->beginning;
+        char *token_contents = malloc(token_length + 1);
+        assert(token_contents && "Could not allocate string for token contents while parsing");
+        memcpy(token_contents, token_it->beginning, token_length);
+        token_contents[token_length] = '\0';
+
+        
+        
+        token_it = token_it->next;
+    }
 
     return err;
 }

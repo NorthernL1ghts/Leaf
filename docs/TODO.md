@@ -28,8 +28,7 @@ High-level roadmap. Order is roughly: lex → parse → codegen.
 
 - [x] `file_contents` does not check for NULL malloc return values.
 
-- [ ] Tokens do not need to be linked lists, or have create/free functions.
-  - We can also remove `print_tokens` while we are at it.
+- [x] Tokens are no longer linked lists; create/free and `print_tokens` removed.
 
 - [ ] When lexing, zero out the given token pointer using memset.
 

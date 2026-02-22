@@ -21,3 +21,9 @@ High-level roadmap. Order is roughly: lex → parse → codegen.
 ---
 
 *No fixed plan — we’ll pick direction as we go.*
+
+
+**Miscellaneous**
+
+**Unnamed Variables**
+It would be cool if an assignment and/or variable declaration could have no identifier, and work on a singular unnamed variable in the environment.

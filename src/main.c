@@ -203,6 +203,20 @@ void environment_set() {
     
 }
 
+/// @return Boolean like value; 1 for success, 0 for failure.
+int token_string_equalp(char* string, Token* token) {
+    if (!string || !token) { return 0; }
+    char* beg = token->beginning;
+    while (*string && token->beginning < token->end) {
+        if (*string != *beg) {
+            return 0;
+        }
+        string++;
+        beg++;
+    }
+    return 1;
+}
+
 Error parse_expr(char* source, Node* result) {
     Token* tokens = NULL;
     Token* token_it = tokens;
@@ -236,13 +250,14 @@ Error parse_expr(char* source, Node* result) {
     while (token_it) {
         // TODO: Map constructs from the language and attempt to create nodes.
 
-        size_t token_length = token_it->end - token_it->beginning;
-        char *token_contents = malloc(token_length + 1);
-        assert(token_contents && "Could not allocate string for token contents while parsing");
-        memcpy(token_contents, token_it->beginning, token_length);
-        token_contents[token_length] = '\0';
-
-        
+        if (token_string_equalp(":", token_it)) {
+            if (token_it->next && token_string_equalp("=", token_it->next)) {
+                printf("Found assignment\n");
+            } else if (token_string_equalp("integer", token_it->next)) {
+                // TODO: Make helper to check if string is type name.
+                printf("Found (hopefully) a variable declaration\n");
+            }
+        }
         
         token_it = token_it->next;
     }

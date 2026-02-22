@@ -1,5 +1,4 @@
 #include <assert.h>
-#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,30 +21,26 @@ long file_size(FILE* file) {
 char* file_contents(char* path) {
     FILE* file = fopen(path, "r");
     if (!file) {
-        printf("Error: Could not open file %s\n", path);
+        printf("Could not open file at %s\n", path);
         return NULL;
     }
     long size = file_size(file);
     char* contents = malloc(size + 1);
-    assert(contents && "Could not allocate buffer for file contents");
     char* write_it = contents;
     size_t bytes_read = 0;
-    while (bytes_read < (size_t)size) {
-        size_t bytes_read_this_iteration = fread(write_it, 1, (size_t)size - bytes_read, file);
+    while (bytes_read < size) {
+        size_t bytes_read_this_iteration = fread(write_it, 1, size - bytes_read, file);
         if (ferror(file)) {
-            printf("Error: Could not read file %s\n", path);
+            printf("Error while reading: %i\n", errno);
             free(contents);
-            fclose(file);
             return NULL;
         }
-
         bytes_read += bytes_read_this_iteration;
         write_it += bytes_read_this_iteration;
 
         if (feof(file)) { break; }
     }
     contents[bytes_read] = '\0';
-    fclose(file);
     return contents;
 }
 
@@ -66,7 +61,7 @@ typedef struct Error {
     char* msg;
 } Error;
 
-Error ok = { ERROR_NONE, NULL };
+Error ok = { ERROR_NONE,NULL };
 
 void print_error(Error err) {
     if (err.type == ERROR_NONE) {
@@ -76,8 +71,7 @@ void print_error(Error err) {
     assert(ERROR_MAX == 6);
     switch (err.type) {
     default:
-        printf("Unkown error type...");
-        break;
+        printf("Unknown error type...");
     case ERROR_TODO:
         printf("TODO (not implemented)");
         break;
@@ -90,9 +84,9 @@ void print_error(Error err) {
     case ERROR_ARGUMENTS:
         printf("Invalid arguments");
         break;
-    case ERROR_GENERIC:
-        break;
     case ERROR_NONE:
+        break;
+    case ERROR_GENERIC:
         break;
     }
     putchar('\n');
@@ -101,15 +95,15 @@ void print_error(Error err) {
     }
 }
 
-#define ERROR_CREATE(n, t, msg)           \
-    Error (n) = { (t), (msg) }
+#define ERROR_CREATE(n, t, msg) \
+	Error (n) = { (t), (msg) }
 
-#define ERROR_PREP(n, t, message)           \
-    (n).type = (t);                          \
-    (n).msg = (message);
+#define ERROR_PREP(n, t, message)	\
+	(n).type = (t);					 \
+	(n).msg = (message);            
 
-const char *whitespace = " \r\n";
-const char *delimiters = " \r\n,{}():";
+const char* whitespace = " \r\n";
+const char* delimiters = " \r\n,():";
 
 typedef struct Token {
     char* beginning;
@@ -124,7 +118,7 @@ Token* token_create() {
     return token;
 }
 
-void token_free(Token* root) {
+void tokens_free(Token* root) {
     while (root) {
         Token* token_to_free = root;
         root = root->next;
@@ -158,28 +152,28 @@ Error lex(char* source, Token* token) {
         return err;
     }
     token->beginning = source;
-    token->beginning += strspn(token->beginning, whitespace); // Skip whitespace
+    token->beginning += strspn(token->beginning, whitespace); // Skip all the whitespace at the beginning.
     token->end = token->beginning;
     if (*(token->end) == '\0') { return err; }
-    token->end += strcspn(token->end, delimiters); // Skip to next delimiter
+    token->end += strcspn(token->beginning, delimiters); // Skip everything not in delimiters.
     if (token->end == token->beginning) {
-        token->end += 1;
+        token->end += 1; // One byte if tokens are singular length.
     }
     return err;
 }
 
-//   Node-
-//   / | \
-//  0  1  2
-//  / \
-// 3   4
+//      Node-
+//     /  |  \
+//    0   1   2
+//   / \
+//  3   4
 //
 // Node
-//   `-- 0 -> 1 -> 2
-//   `-- 3 -> 4
+// `-- 0 -> 1 -> 2
+//     `-- 3 -> 4
 
 // TODO:
-// |-- API to create a new Node.
+// |-- API to create new node.
 // `-- API to add node as child.
 typedef long long integer_t;
 typedef struct Node {
@@ -197,10 +191,48 @@ typedef struct Node {
     struct Node* next_child;
 } Node;
 
-void print_node_impl(Node* node) {
+// Predicates
+#define nonep(node) ((node).type == NODE_TYPE_NONE)
+#define integerp(node) ((node).type == NODE_TYPE_INTEGER)
+
+/// @return Boolean-like value; 1 for success, 0 for failure.
+int node_compare(Node* a, Node* b) {
+    if (!a && !b) {
+        if (!a || !b) {
+            return 1;
+        }
+        return 0;
+    }
+    assert(NODE_TYPE_MAX == 3 && "node_compare() must handle all node types");
+    if (a->type != b->type) { return 0; }
+    switch (a->type) {
+    case NODE_TYPE_NONE:
+        if (nonep(*b)) {
+            return 1;
+        }
+        return 0;
+        break;
+    case NODE_TYPE_INTEGER:
+        if (a->value.integer == b->value.integer) {
+            return 1;
+        }
+        return 0;
+        break;
+    case NODE_TYPE_PROGRAM:
+        printf("TODO: Compare two programs");
+        break;
+    }
+    return 0;
+}
+
+void print_node(Node* node, size_t indent_level) {
     if (!node) { return; }
-    // Print node type and value.
+    // Print indent.
+    for (size_t i = 0; i < indent_level; ++i) {
+        putchar(' ');
+    }
     assert(NODE_TYPE_MAX == 3 && "print_node() must handle all node types");
+    // Print type + value.
     switch (node->type) {
     default:
         printf("UNKNOWN");
@@ -214,16 +246,6 @@ void print_node_impl(Node* node) {
         printf("PROGRAM");
         break;
     }
-}
-
-void print_node(Node* node, size_t indent_level) {
-    if (!node) { return; }
-
-    // Print indent.
-    for (size_t i = 0; i < indent_level; ++i) {
-        putchar(' ');
-    }
-    print_node_impl(node);
     putchar('\n');
     // Print children.
     Node* child = node->children;
@@ -233,44 +255,69 @@ void print_node(Node* node, size_t indent_level) {
     }
 }
 
-#define nonep(node)    ((node).type == NODE_TYPE_NONE)
-#define integerp(node) ((node).type == NODE_TYPE_INTEGER)
-
-// TODO: Make more efficient! Possibly keep track 
-// of all allocated nodes and free them all at once.
+// TODO: Make more efficient, possible way to do this is to keep track
+// of allocated pointers and then freeing them all in one go.
 void node_free(Node* root) {
     if (!root) { return; }
     Node* child = root->children;
-    Node* next = NULL;
+    Node* next_child = NULL;
     while (child) {
-        next = child->next_child;
+        next_child = child->next_child;
         node_free(child);
-        child = next;
+        child = next_child;
     }
     free(root);
 }
 
-// TODO:
+// TODO: 
 // |-- API to create a new Binding.
-// `-- API to add Binding to the Environment.
+// `-- API to add Binding to enviornment.
 typedef struct Binding {
-    char* id;
-    char* value;
-    struct Binding* token_to_free;
+    Node id;
+    Node value;
+    struct Binding* next;
 } Binding;
 
-// TODO:
-// |-- API to create a new Environment.
+// TODO: API to create new Environment.
 typedef struct Environment {
     struct Environment* parent;
     Binding* bind;
 } Environment;
 
-void environment_set() {
-    
+Environment* environment_create(Environment* parent) {
+    Environment* env = malloc(sizeof(Environment));
+    assert(env && "Could not allocate memory for new environment");
+    env->parent = parent;
+    env->bind = NULL;
+    return env;
 }
 
-/// @return Boolean like value; 1 for success, 0 for failure.
+void enviornment_set(Environment env, Node id, Node value) {
+    Binding* binding = malloc(sizeof(Binding));
+    assert(binding && "Could not allocate new binding for environment");
+    binding->id = id;
+    binding->value = value;
+    binding->next = env.bind;
+    env.bind = binding;
+}
+
+Node enviornment_get(Environment env, Node id) {
+    Binding* binding_it = env.bind;
+    while (binding_it) {
+        if (node_compare(&binding_it->id, &id)) {
+            return binding_it->value;
+        }
+        binding_it = binding_it->next;
+    }
+    Node value;
+    value.type = NODE_TYPE_NONE;
+    value.children = NULL;
+    value.next_child = NULL;
+    value.value.integer = 0;
+    return value;
+}
+
+/// @return Boolean-like value; 1 for success, 0 for failure.
 int token_string_equalp(char* string, Token* token) {
     if (!string || !token) { return 0; }
     char* beg = token->beginning;
@@ -284,7 +331,7 @@ int token_string_equalp(char* string, Token* token) {
     return 1;
 }
 
-/// @return Boolean like value; 1 for success, 0 for failure.
+/// @return Boolean-like value; 1 upon success, 0 for failure.
 int parse_integer(Token* token, Node* node) {
     if (!token || !node) { return 0; }
     if (token->end - token->beginning == 1 && *(token->beginning) == '0') {
@@ -359,6 +406,6 @@ int main(int argc, char** argv) {
 
         free(contents);
     }
-    
+
     return 0;
 }

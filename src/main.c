@@ -184,6 +184,22 @@ typedef struct Node {
 #define integerp(node) ((node).type == NODE_TYPE_INTEGER)
 #define symbolp(node) ((node).type == NODE_TYPE_SYMBOL)
 
+void node_add_child(Node* parent, Node* new_child) {
+    if (!parent || !new_child) { return; }
+    Node* allocated_child = malloc(sizeof(Node));
+    assert(allocated_child && "Could not allocate new child Node for AST");
+    *allocated_child = *new_child;
+    if (parent->children) {
+        Node* child = parent->children;
+        while (child->next_child) {
+            child = child->next_child;
+        }
+        child->next_child = allocated_child;
+    } else {
+        parent->children = allocated_child;
+    }
+}
+
 /// @return Boolean-like value; 1 for success, 0 for failure.
 int node_compare(Node* a, Node* b) {
     if (!a && !b) {
@@ -242,7 +258,8 @@ void print_node(Node* node, size_t indent_level) {
         printf("TODO: print_node() BINARY OPERATOR");
         break;
     case NODE_TYPE_VARIABLE_DECLARATION:
-        printf("TODO: print_node() VARIABLE DECLARATION");
+        printf("VARIABLE DECLARATION");
+        // TODO: Print first child (symbol), then type of second child.
         break;
     case NODE_TYPE_VARIABLE_DECLARATION_INITIALIZED:
         printf("TODO: print_node() VARIABLE DECLARATION INITIALIZED");
@@ -403,6 +420,46 @@ Error parse_expr(char* source, char** end, Node* result) {
             // TODO: Check if valid symbol for environment, and attempt to
             // pattern match variable access, assignment, declaration or
             // declaration with initialization.
+
+            err = lex(current_token.end, &current_token);
+            if (err.type != ERROR_NONE) { 
+                return err;
+            }
+            *end = current_token.end;
+            size_t token_length = current_token.end - current_token.beginning;
+            if (token_length == 0) { break; }
+
+            if (token_string_equalp(":", &current_token)) {
+                err = lex(current_token.end, &current_token);
+                if (err.type != ERROR_NONE) { 
+                    return err;
+                }
+                *end = current_token.end;
+                size_t token_length = current_token.end - current_token.beginning;
+                if (token_length == 0) { break; }
+
+                // TODO: Look up type in types environment from parsing context.
+                if (token_string_equalp("integer", &current_token)) {
+                    Node var_decl;
+                    var_decl.children = NULL;
+                    var_decl.next_child = NULL;
+                    var_decl.type = NODE_TYPE_VARIABLE_DECLARATION;
+                
+                    Node type_node;
+                    memset(&type_node, 0, sizeof(Node));
+                    type_node.type = NODE_TYPE_INTEGER;
+                    type_node.value.integer = 0;
+
+                    node_add_child(&var_decl, &type_node);
+                    node_add_child(&var_decl, &symbol);
+
+                    *result = var_decl;
+
+                    // TODO: Look ahead for "=" assignment operator.
+
+                    return ok;
+                }
+            }
 
             printf("Unrecognized token: ");
             print_token(current_token);

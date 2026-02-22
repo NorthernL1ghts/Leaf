@@ -193,6 +193,42 @@ typedef struct Node {
     struct Node* next_child;
 } Node;
 
+void print_node_impl(Node* node) {
+    if (!node) { return; }
+    // Print node type and value.
+    assert(NODE_TYPE_MAX == 3 && "print_node() must handle all node types");
+    switch (node->type) {
+    default:
+        printf("UNKNOWN");
+    case NODE_TYPE_NONE:
+        printf("NONE");
+        break;
+    case NODE_TYPE_INTEGER:
+        printf("INT:%lld", node->value.integer);
+        break;
+    case NODE_TYPE_PROGRAM:
+        printf("PROGRAM");
+        break;
+    }
+}
+
+void print_node(Node* node, size_t indent_level) {
+    if (!node) { return; }
+
+    // Print indent.
+    for (size_t i = 0; i < indent_level; ++i) {
+        putchar(' ');
+    }
+    print_node_impl(node);
+    putchar('\n');
+    // Print children.
+    Node* child = node->children;
+    while (child) {
+        print_node(child, indent_level + 4);
+        child = child->next_child;
+    }
+}
+
 #define nonep(node)    ((node).type == NODE_TYPE_NONE)
 #define integerp(node) ((node).type == NODE_TYPE_INTEGER)
 
@@ -243,6 +279,18 @@ int token_string_equalp(char* string, Token* token) {
     return 1;
 }
 
+/// @return Boolean like value; 1 for success, 0 for failure.
+int parse_integer(Token* token, Node* node) {
+    if (!token || !node) { return 0; }
+    if (token->end - token->beginning == 1 && *(token->beginning) == '0') {
+        node->type = NODE_TYPE_INTEGER;
+        node->value.integer = 0;
+    } else if ((node->value.integer = strtoll(token->beginning, NULL, 10)) != 0) {
+        node->type = NODE_TYPE_INTEGER;
+    } else { return 0; }
+    return 1;
+}
+
 Error parse_expr(char* source, Node* result) {
     size_t token_count = 0;
     Token current_token;
@@ -256,25 +304,19 @@ Error parse_expr(char* source, Node* result) {
     root->type = NODE_TYPE_PROGRAM;
 
     Node working_node;
-    working_node.children = NULL;
-    working_node.next_child = NULL;
-    working_node.type = NODE_TYPE_NONE;
-    working_node.value.integer = 0;
     while ((err = lex(current_token.end, &current_token)).type == ERROR_NONE) {
+        working_node.children = NULL;
+        working_node.next_child = NULL;
+        working_node.type = NODE_TYPE_NONE;
+        working_node.value.integer = 0;
         size_t token_length = current_token.end - current_token.beginning;
         if (token_length == 0) { break; }
-        if (token_length == 1 && *(current_token.beginning) == '0') {
-            working_node.type = NODE_TYPE_INTEGER;
-            working_node.value.integer = 0;
-            printf("Zero integer!\n");
+        if (parse_integer(&current_token, &working_node)) {
+            // Look ahead for binary operators that include integers.
         }
-        if ((working_node.value.integer = strtoll(current_token.beginning, NULL, 10)) != 0) {
-            working_node.type = NODE_TYPE_INTEGER;
-            printf("Found integer %lld\n", working_node.value.integer);
-        }
-        if (token_string_equalp(":", &current_token)) {
-            Token equals;
-        }
+        printf("Found node: ");
+        print_node(&working_node, 0);
+        putchar('\n');
     }
 
     return err;

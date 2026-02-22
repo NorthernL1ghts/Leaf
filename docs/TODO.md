@@ -30,11 +30,11 @@ High-level roadmap. Order is roughly: lex → parse → codegen.
 
 - [x] Tokens are no longer linked lists; create/free and `print_tokens` removed.
 
-- [ ] Get rid of `integer_t`; just use `long long` and move on.
+- [x] Get rid of `integer_t`; just use `long long` and move on.
 
-- [ ] Complete the change to `parse_expr`: accept `char* source`, `char** end`, and `Node* result`. Get rid of `working_node` completely and use `result`. Get rid of root node allocation — that will be handled at a higher level; just use `result`.
+- [x] Complete the change to `parse_expr`: accept `char* source`, `char** end`, and `Node* result`. Get rid of `working_node` completely and use `result`. Get rid of root node allocation — that will be handled at a higher level; just use `result`.
 
-- [ ] Parse in a while loop, instead of just parsing a single expression.
+- [x] Parse in a while loop, instead of just parsing a single expression.
   - Maybe a parsing context contains multiple environments (for types, defined variables, etc.). That would let the parser look up variable-access symbols to ensure they are defined and have the right type.
   - This is also where the operator environment could live: a mapping of operators to functions that apply them.
   - Each would need to record what kind of operator it is (e.g. prefix unary, postfix unary, infix binary, etc.). We need a way to define a new operator programmatically that doesn’t suck.

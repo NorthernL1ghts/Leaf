@@ -9,7 +9,7 @@ set "BUILD_DIR=build"
 set "CMAKE_GENERATOR=MinGW Makefiles"
 set "CMAKE_C_COMPILER=gcc"
 set "EXE_NAME=leaf.exe"
-set "DEFAULT_LEAF_FILE=examples\Example.leaf"
+set "DEFAULT_LEAF_FILE=examples\Simple.leaf"
 
 if not exist "CMakeLists.txt" (
     echo CMakeLists.txt not found in %ROOT%

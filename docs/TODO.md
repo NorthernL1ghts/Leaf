@@ -30,8 +30,6 @@ High-level roadmap. Order is roughly: lex → parse → codegen.
 
 - [x] Tokens are no longer linked lists; create/free and `print_tokens` removed.
 
-- [ ] When lexing, zero out the given token pointer using memset.
-
 - [ ] Get rid of `integer_t`; just use `long long` and move on.
 
 - [ ] Complete the change to `parse_expr`: accept `char* source`, `char** end`, and `Node* result`. Get rid of `working_node` completely and use `result`. Get rid of root node allocation — that will be handled at a higher level; just use `result`.

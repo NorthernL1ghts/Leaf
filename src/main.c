@@ -132,6 +132,10 @@ void token_free(Token* root) {
     }
 }
 
+void print_token(Token t) {
+    printf("%.*s", t.end - t.beginning, t.beginning);
+}
+
 void print_tokens(Token* root) {
     size_t count = 1;
     while (root) {
@@ -232,7 +236,8 @@ void print_node(Node* node, size_t indent_level) {
 #define nonep(node)    ((node).type == NODE_TYPE_NONE)
 #define integerp(node) ((node).type == NODE_TYPE_INTEGER)
 
-// TODO: Make more efficient! Possibly keep track of all allocated nodes and free them all at once.
+// TODO: Make more efficient! Possibly keep track 
+// of all allocated nodes and free them all at once.
 void node_free(Node* root) {
     if (!root) { return; }
     Node* child = root->children;
@@ -313,6 +318,21 @@ Error parse_expr(char* source, Node* result) {
         if (token_length == 0) { break; }
         if (parse_integer(&current_token, &working_node)) {
             // Look ahead for binary operators that include integers.
+            Token integer;
+            memcpy(&integer, &current_token, sizeof(Token));
+            err = lex(current_token.end, &current_token);
+            if (err.type != ERROR_NONE) { 
+                return err; 
+            }
+            // TODO: Check for valid integer operator.
+        } else {
+            printf("Unrecognized token: ");
+            print_token(current_token);
+            putchar('\n');
+
+            // TODO: Check if valid symbol for environment, and attempt to
+            // pattern match variable access, assignment, declaration or
+            // declaration with initialization.
         }
         printf("Found node: ");
         print_node(&working_node, 0);

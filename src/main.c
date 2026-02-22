@@ -26,6 +26,7 @@ char* file_contents(char* path) {
     }
     long size = file_size(file);
     char* contents = malloc(size + 1);
+    assert(contents && "Could not allocate buffer for file contents");
     char* write_it = contents;
     size_t bytes_read = 0;
     while (bytes_read < size) {
@@ -41,6 +42,7 @@ char* file_contents(char* path) {
         if (feof(file)) { break; }
     }
     contents[bytes_read] = '\0';
+    fclose(file);
     return contents;
 }
 
@@ -271,7 +273,7 @@ void node_free(Node* root) {
 
 // TODO: 
 // |-- API to create a new Binding.
-// `-- API to add Binding to enviornment.
+// `-- API to add Binding to environment.
 typedef struct Binding {
     Node id;
     Node value;
@@ -292,7 +294,7 @@ Environment* environment_create(Environment* parent) {
     return env;
 }
 
-void enviornment_set(Environment env, Node id, Node value) {
+void environment_set(Environment env, Node id, Node value) {
     Binding* binding = malloc(sizeof(Binding));
     assert(binding && "Could not allocate new binding for environment");
     binding->id = id;
@@ -301,7 +303,7 @@ void enviornment_set(Environment env, Node id, Node value) {
     env.bind = binding;
 }
 
-Node enviornment_get(Environment env, Node id) {
+Node environment_get(Environment env, Node id) {
     Binding* binding_it = env.bind;
     while (binding_it) {
         if (node_compare(&binding_it->id, &id)) {
